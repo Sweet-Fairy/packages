@@ -9,27 +9,21 @@
 
 include $(TOPDIR)/rules.mk
 
-PKG_NAME:=netopeer2
+PKG_NAME:=Netopeer2
+PKG_VERSION:=0.7-r1
+PKG_RELEASE:=2
 
 PKG_LICENSE:=BSD-3-Clause
 PKG_MAINTAINER:=Mislav Novakovic <mislav.novakovic@sartura.hr>
 
-PKG_VERSION:=0.4.13
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+PKG_SOURCE_URL:=https://codeload.github.com/CESNET/Netopeer2/tar.gz/v$(PKG_VERSION)?
+PKG_HASH:=040013d1e315c62c496b704475665165578c374ffb387cbbff422cf8898d3a12
 
-PKG_SOURCE_PROTO:=git
-PKG_SOURCE_VERSION:=ae560bef2e70d274f6d028b59e3cb398ea2a621d
-PKG_MIRROR_HASH:=43b7f9c436afc76de539a7426b1462249326318b9b836f1d49282106a730a6b8
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION)-$(PKG_SOURCE_VERSION).tar.xz
-PKG_SOURCE_URL:=https://github.com/CESNET/Netopeer2.git
-PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)-$(PKG_SOURCE_VERSION)
-
-PKG_BUILD_ROOT:=$(BUILD_DIR)/$(PKG_SOURCE_SUBDIR)
-PKG_BUILD_DIR:=$(PKG_BUILD_ROOT)
+CMAKE_INSTALL:=1
 
 PKG_BUILD_PARALLEL:=1
 PKG_INSTALL:=1
-
-CMAKE_INSTALL:=1
 
 include $(INCLUDE_DIR)/package.mk
 include $(INCLUDE_DIR)/cmake.mk
@@ -43,7 +37,7 @@ define Package/netopeer2-server
   CATEGORY:=Utilities
   TITLE:=NETCONF server
   URL:=$(PKG_SOURCE_URL)
-  DEPENDS:=+libpthread +libyang +libnetconf2 +netopeer2-keystored +libsysrepo +sysrepocfg +sysrepoctl +sysrepo
+  DEPENDS:=+libcurl +libpthread +libyang +libnetconf2 +netopeer2-keystored +libsysrepo +sysrepocfg +sysrepoctl +sysrepo
   MENU:=1
 endef
 
@@ -60,7 +54,7 @@ define Package/netopeer2-keystored
   CATEGORY:=Utilities
   TITLE:=Netopeer2 key store management
   URL:=$(PKG_SOURCE_URL)
-  DEPENDS:=+libopenssl +libsysrepo +sysrepo +sysrepocfg +sysrepoctl +SSH_KEYS:openssh-keygen +SSH_KEYS:openssl-util
+  DEPENDS:=+libopenssl +libsysrepo +sysrepo +sysrepocfg +sysrepoctl +SSH_KEYS:openssh-keygen
   MENU:=1
 endef
 
@@ -74,22 +68,29 @@ endef
 CMAKE_OPTIONS += \
 	-DCMAKE_INSTALL_PREFIX:PATH=/usr \
 	-DCMAKE_BUILD_TYPE:STRING=Release \
-	-DKEYSTORED_KEYS_DIR:STRING=/etc/keystored/keys
+	-DKEYSTORED_KEYS_DIR:STRING=/etc/keystored/keys \
+	-DENABLE_CONFIGURATION:BOOL=OFF \
+	-DMODEL_INSTALL:BOOL=OFF \
+	-DSSH_KEY_INSTALL:BOOL=OFF
 
 define Package/netopeer2-server/install
 	$(INSTALL_DIR) $(1)/bin
-	$(INSTALL_BIN) $(PKG_BUILD_ROOT)/server/netopeer2-server $(1)/bin/
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/server/netopeer2-server $(1)/bin/
 
 	$(INSTALL_DIR) $(1)/etc/sysrepo/yang
-	$(INSTALL_DATA) $(PKG_BUILD_ROOT)/modules/ietf-ssh-server.yang $(1)/etc/sysrepo/yang/ietf-ssh-server@2016-11-02.yang
-	$(INSTALL_DATA) $(PKG_BUILD_ROOT)/modules/ietf-tls-server.yang $(1)/etc/sysrepo/yang/ietf-tls-server@2016-11-02.yang
-	$(INSTALL_DATA) $(PKG_BUILD_ROOT)/modules/iana-crypt-hash.yang $(1)/etc/sysrepo/yang/iana-crypt-hash@2014-08-06.yang
-	$(INSTALL_DATA) $(PKG_BUILD_ROOT)/modules/ietf-x509-cert-to-name.yang $(1)/etc/sysrepo/yang/ietf-x509-cert-to-name@2014-12-10.yang
-	$(INSTALL_DATA) $(PKG_BUILD_ROOT)/modules/ietf-netconf-server.yang $(1)/etc/sysrepo/yang/ietf-netconf-server@2016-11-02.yang
-	$(INSTALL_DATA) $(PKG_BUILD_ROOT)/modules/ietf-system.yang $(1)/etc/sysrepo/yang/ietf-system@2014-08-06.yang
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/modules/ietf-ssh-server.yang $(1)/etc/sysrepo/yang/ietf-ssh-server@2016-11-02.yang
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/modules/ietf-tls-server.yang $(1)/etc/sysrepo/yang/ietf-tls-server@2016-11-02.yang
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/modules/iana-crypt-hash.yang $(1)/etc/sysrepo/yang/iana-crypt-hash@2014-08-06.yang
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/modules/ietf-x509-cert-to-name.yang $(1)/etc/sysrepo/yang/ietf-x509-cert-to-name@2014-12-10.yang
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/modules/ietf-netconf-server.yang $(1)/etc/sysrepo/yang/ietf-netconf-server@2016-11-02.yang
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/modules/ietf-netconf-monitoring.yang $(1)/etc/sysrepo/yang/ietf-netconf-monitoring@2010-10-04.yang
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/modules/ietf-netconf-with-defaults.yang $(1)/etc/sysrepo/yang/ietf-netconf-with-defaults@2011-06-01.yang
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/modules/ietf-system.yang $(1)/etc/sysrepo/yang/ietf-system@2014-08-06.yang
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/modules/ietf-datastores.yang $(1)/etc/sysrepo/yang/ietf-datastores@2017-08-17.yang
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/modules/ietf-yang-library.yang $(1)/etc/sysrepo/yang/ietf-yang-library@2018-01-17.yang
 
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
-	$(INSTALL_BIN) ./files/netopeer2-server.default $(1)/etc/uci-defaults/99_netopeer2-server
+	$(INSTALL_BIN) ./files/netopeer2-server.default $(1)/etc/uci-defaults/98_netopeer2-server
 
 	$(INSTALL_DIR) $(1)/etc/init.d/
 	$(INSTALL_BIN) ./files/netopeer2-server.init $(1)/etc/init.d/netopeer2-server
@@ -100,15 +101,15 @@ endef
 
 define Package/netopeer2-cli/install
 	$(INSTALL_DIR) $(1)/bin
-	$(INSTALL_BIN) $(PKG_BUILD_ROOT)/cli/netopeer2-cli $(1)/bin/
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/cli/netopeer2-cli $(1)/bin/
 endef
 
 define Package/netopeer2-keystored/install
 	$(INSTALL_DIR) $(1)/usr/lib/sysrepo/plugins/
-	$(INSTALL_BIN) $(PKG_BUILD_ROOT)/keystored/libkeystored.so $(1)/usr/lib/sysrepo/plugins/
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/keystored/libkeystored.so $(1)/usr/lib/sysrepo/plugins/
 
 	$(INSTALL_DIR) $(1)/etc/sysrepo/yang
-	$(INSTALL_DATA) $(PKG_BUILD_ROOT)/modules/ietf-keystore.yang $(1)/etc/sysrepo/yang/ietf-keystore@2016-10-31.yang
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/modules/ietf-keystore.yang $(1)/etc/sysrepo/yang/ietf-keystore@2016-10-31.yang
 
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 
@@ -123,7 +124,7 @@ else
 endif
 
 	$(INSTALL_DIR) $(1)/usr/share/netopeer2-keystored
-	$(INSTALL_DATA) $(PKG_BUILD_ROOT)/keystored/stock_key_config.xml $(1)/usr/share/netopeer2-keystored
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/keystored/stock_key_config.xml $(1)/usr/share/netopeer2-keystored
 endef
 
 $(eval $(call BuildPackage,netopeer2-server))
